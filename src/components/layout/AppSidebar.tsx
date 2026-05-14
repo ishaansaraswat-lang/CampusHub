@@ -39,6 +39,7 @@ import {
   FileText,
   Image,
   ClipboardList,
+  BarChart3,
 } from 'lucide-react';
 
 interface NavItem {
@@ -73,6 +74,7 @@ export function AppSidebar() {
     { title: 'Job Postings', url: '/placement-admin/jobs', icon: FileText },
     { title: 'Applications', url: '/placement-admin/applications', icon: ClipboardList },
     { title: 'Results', url: '/placement-admin/results', icon: Trophy },
+    { title: 'Statistics', url: '/placement-admin/statistics', icon: BarChart3 },
   ];
 
   const superAdminNav: NavItem[] = [
@@ -84,22 +86,32 @@ export function AppSidebar() {
 
   const renderNavGroup = (title: string, items: NavItem[]) => (
     <SidebarGroup>
-      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.url}>
-              <SidebarMenuButton
-                asChild
-                isActive={location.pathname === item.url}
-              >
-                <Link to={item.url}>
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+        <SidebarMenu className="gap-2">
+          {items.map((item) => {
+            const active = location.pathname === item.url;
+            return (
+              <SidebarMenuItem key={item.url}>
+                <SidebarMenuButton
+                  asChild
+                  className={cn(
+                    'h-12 rounded-2xl px-4 font-medium transition-all duration-300',
+                    active
+                      ? 'shadow-inset text-primary hover:text-primary'
+                      : 'text-muted-foreground hover:text-primary hover:shadow-inset-sm hover:bg-transparent',
+                  )}
+                >
+                  <Link to={item.url}>
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
@@ -115,35 +127,35 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-4 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <GraduationCap className="h-4 w-4 text-primary-foreground" />
+    <Sidebar className="border-none bg-background">
+      <SidebarHeader className="bg-background">
+        <div className="flex items-center gap-3 px-4 py-5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-extruded-sm">
+            <GraduationCap className="h-5 w-5" />
           </div>
-          <span className="font-semibold">College Hub</span>
+          <h1 className="font-display text-xl font-bold tracking-tight">CampusFlow</h1>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="bg-background px-3">
         {isStudent && renderNavGroup('Student', studentNav)}
         {isEventAdmin && renderNavGroup('Event Admin', eventAdminNav)}
         {isPlacementCell && renderNavGroup('Placement Cell', placementNav)}
         {isSuperAdmin && renderNavGroup('Super Admin', superAdminNav)}
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
+      <SidebarFooter className="bg-background p-3">
+        <SidebarMenu className="gap-2">
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="h-auto rounded-2xl bg-background p-3 shadow-extruded-sm transition-all hover:bg-background hover:shadow-inset-sm data-[state=open]:shadow-inset-sm"
                 >
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-9 w-9 shadow-extruded-sm">
                     <AvatarImage src={profile?.avatar_url || undefined} />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-background text-primary">
                       {profile?.name ? getInitials(profile.name) : 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -155,7 +167,7 @@ export function AppSidebar() {
                       {profile?.email}
                     </span>
                   </div>
-                  <ChevronUp className="ml-auto h-4 w-4" />
+                  <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -168,13 +180,18 @@ export function AppSidebar() {
                     Profile
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={signOut}
+              className="h-12 rounded-2xl bg-background px-4 font-medium text-muted-foreground shadow-extruded-sm transition-all hover:bg-background hover:text-destructive hover:shadow-inset-sm active:shadow-inset"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Sign Out</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

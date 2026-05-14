@@ -6,14 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -102,27 +94,27 @@ export default function UsersManagement() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
+        <div className="pt-4 md:pt-2">
+          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight">User Management</h1>
+          <p className="mt-1 text-muted-foreground">
             View all users, search, and manage their roles
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search by name, email, or student ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-11 h-11 rounded-2xl bg-background border-0 shadow-inset-sm focus-visible:ring-1"
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="ghost" className="h-11 rounded-2xl bg-background shadow-extruded-sm hover:shadow-inset-sm">
                 <Users className="mr-2 h-4 w-4" />
                 {roleFilter === 'all' ? 'All Roles' : ROLE_LABELS[roleFilter]}
               </Button>
@@ -141,105 +133,107 @@ export default function UsersManagement() {
           </DropdownMenu>
         </div>
 
-        {/* Users Table */}
+        {/* Users Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
+        ) : filteredUsers?.length === 0 ? (
+          <div className="rounded-2xl bg-background p-10 text-center text-muted-foreground shadow-inset-sm">
+            No users found
+          </div>
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Roles</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredUsers?.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatar_url || undefined} />
-                            <AvatarFallback>
-                              {user.name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{user.student_id || '-'}</TableCell>
-                      <TableCell>{user.department || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles.map((role) => (
-                            <Badge
-                              key={role}
-                              variant="secondary"
-                              className={`${ROLE_COLORS[role]} cursor-pointer`}
-                              onClick={() => handleRemoveRole(user.user_id, role, user.name)}
-                            >
-                              {ROLE_LABELS[role]}
-                              <X className="ml-1 h-3 w-3" />
-                            </Badge>
-                          ))}
-                          {user.roles.length === 0 && (
-                            <span className="text-sm text-muted-foreground">No roles</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Add Role</DropdownMenuLabel>
-                            {getAvailableRolesToAdd(user.roles).length === 0 ? (
-                              <DropdownMenuItem disabled>
-                                All roles assigned
-                              </DropdownMenuItem>
-                            ) : (
-                              getAvailableRolesToAdd(user.roles).map((role) => (
-                                <DropdownMenuItem
-                                  key={role}
-                                  onClick={() => handleAddRole(user.user_id, role, user.name)}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  {ROLE_LABELS[role]}
-                                </DropdownMenuItem>
-                              ))
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredUsers?.map((user) => (
+              <div
+                key={user.id}
+                className="rounded-2xl bg-background p-5 shadow-extruded-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-extruded"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-12 w-12 shadow-extruded-xs">
+                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarFallback className="bg-background text-primary font-semibold">
+                        {user.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{user.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      {user.student_id && (
+                        <p className="text-[11px] text-muted-foreground/80 mt-0.5">ID: {user.student_id}</p>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 shrink-0 rounded-full bg-background shadow-extruded-xs hover:shadow-inset-sm"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Add Role</DropdownMenuLabel>
+                      {getAvailableRolesToAdd(user.roles).length === 0 ? (
+                        <DropdownMenuItem disabled>All roles assigned</DropdownMenuItem>
+                      ) : (
+                        getAvailableRolesToAdd(user.roles).map((role) => (
+                          <DropdownMenuItem
+                            key={role}
+                            onClick={() => handleAddRole(user.user_id, role, user.name)}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            {ROLE_LABELS[role]}
+                          </DropdownMenuItem>
+                        ))
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                {(user.department || user.year) && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {user.department && (
+                      <span className="inline-flex items-center rounded-full bg-background px-3 py-1 text-xs font-medium shadow-inset-sm">
+                        {user.department}
+                      </span>
+                    )}
+                    {user.year && (
+                      <span className="inline-flex items-center rounded-full bg-background px-3 py-1 text-xs font-medium shadow-inset-sm">
+                        Year {user.year}
+                      </span>
+                    )}
+                  </div>
                 )}
-              </TableBody>
-            </Table>
+
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {user.roles.length === 0 ? (
+                    <span className="text-xs text-muted-foreground">No roles assigned</span>
+                  ) : (
+                    user.roles.map((role) => (
+                      <Badge
+                        key={role}
+                        variant="secondary"
+                        className={`${ROLE_COLORS[role]} cursor-pointer`}
+                        onClick={() => handleRemoveRole(user.user_id, role, user.name)}
+                      >
+                        {ROLE_LABELS[role]}
+                        <X className="ml-1 h-3 w-3" />
+                      </Badge>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Stats */}
         {users && (
-          <div className="text-sm text-muted-foreground">
+          <div className="inline-flex items-center rounded-full bg-background px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-inset-sm">
             Showing {filteredUsers?.length || 0} of {users.length} users
           </div>
         )}

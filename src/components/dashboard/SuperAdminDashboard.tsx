@@ -1,11 +1,26 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Building2, Settings, ArrowRight, Loader2, Plus } from 'lucide-react';
+import {
+  Calendar,
+  Users,
+  Building2,
+  Settings,
+  Loader2,
+} from 'lucide-react';
 import type { Event, Profile } from '@/types/database';
+import {
+  DashboardHeader,
+  StatTile,
+  Panel,
+  ViewAllLink,
+  ActivityFeed,
+  QuickToolsGrid,
+  StatusPill,
+} from './shared';
+import { useActivityFeed } from '@/hooks/useActivityFeed';
 
 interface SuperAdminStats {
   totalUsers: number;
@@ -15,6 +30,7 @@ interface SuperAdminStats {
 }
 
 export function SuperAdminDashboard() {
+  const { data: activity } = useActivityFeed('super_admin');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<SuperAdminStats>({
     totalUsers: 0,
@@ -28,27 +44,23 @@ export function SuperAdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Count users
         const { data: usersData, count: usersCount } = await supabase
           .from('profiles')
           .select('*', { count: 'exact' })
           .order('created_at', { ascending: false })
           .limit(5);
 
-        // Count events
         const { data: eventsData, count: eventsCount } = await supabase
           .from('events')
           .select('*', { count: 'exact' })
           .order('created_at', { ascending: false })
           .limit(5);
 
-        // Count active events
         const { count: activeCount } = await supabase
           .from('events')
           .select('*', { count: 'exact', head: true })
           .in('status', ['upcoming', 'active']);
 
-        // Count companies
         const { count: companiesCount } = await supabase
           .from('companies')
           .select('*', { count: 'exact', head: true });
@@ -59,7 +71,6 @@ export function SuperAdminDashboard() {
           activeEvents: activeCount || 0,
           totalCompanies: companiesCount || 0,
         });
-
         setRecentUsers((usersData as Profile[]) || []);
         setRecentEvents((eventsData as Event[]) || []);
       } catch (error) {
@@ -68,7 +79,6 @@ export function SuperAdminDashboard() {
         setLoading(false);
       }
     };
-
     fetchDashboardData();
   }, []);
 
@@ -82,199 +92,103 @@ export function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
-          <p className="text-muted-foreground">
-            System overview and management
-          </p>
-        </div>
-        <Button asChild>
-          <Link to="/super-admin/events">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Event
-          </Link>
-        </Button>
+      <DashboardHeader
+        title="Super Admin Dashboard"
+        subtitle="System overview and management."
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatTile label="Total Users" value={stats.totalUsers} caption="Registered users" icon={Users} />
+        <StatTile label="Total Events" value={stats.totalEvents} caption="All events" icon={Calendar} tone="info" />
+        <StatTile label="Active Events" value={stats.activeEvents} caption="Currently running" icon={Calendar} tone="success" />
+        <StatTile label="Companies" value={stats.totalCompanies} caption="For placements" icon={Building2} tone="warning" />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Registered users</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalEvents}</div>
-            <p className="text-xs text-muted-foreground">All events created</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Events</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeEvents}</div>
-            <p className="text-xs text-muted-foreground">Currently running</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Companies</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCompanies}</div>
-            <p className="text-xs text-muted-foreground">For placements</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Recent Users */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Users</CardTitle>
-                <CardDescription>Newly registered users</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/super-admin/users">
-                  View all <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {recentUsers.length > 0 ? (
-              <div className="space-y-4">
-                {recentUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
-                  >
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                    <Badge variant="secondary">
-                      {user.department || 'No dept'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-4">
-                No users registered yet
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Events */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Events</CardTitle>
-                <CardDescription>Latest created events</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/super-admin/events">
-                  View all <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <Panel
+            title="Recent Events"
+            description="Latest created events"
+            action={<ViewAllLink to="/super-admin/events" />}
+          >
             {recentEvents.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {recentEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="flex items-center justify-between rounded-lg border p-3"
+                    className="rounded-2xl bg-background p-4 shadow-extruded-sm transition-all hover:-translate-y-0.5 hover:shadow-extruded"
                   >
-                    <div>
-                      <p className="font-medium">{event.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.start_date
-                          ? new Date(event.start_date).toLocaleDateString()
-                          : 'Date TBD'}
-                      </p>
+                    <div className="flex items-start justify-between gap-2">
+                      <Badge
+                        variant={
+                          event.status === 'active'
+                            ? 'success'
+                            : event.status === 'completed'
+                            ? 'secondary'
+                            : 'default'
+                        }
+                      >
+                        {event.status}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant={
-                        event.status === 'active'
-                          ? 'default'
-                          : event.status === 'completed'
-                          ? 'secondary'
-                          : 'outline'
-                      }
-                    >
-                      {event.status}
-                    </Badge>
+                    <p className="mt-3 font-display text-lg font-bold line-clamp-1">{event.name}</p>
+                    <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {event.start_date ? new Date(event.start_date).toLocaleDateString() : 'Date TBD'}
+                    </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-4">
-                No events created yet
-              </p>
+              <p className="text-center text-muted-foreground py-6">No events created yet</p>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </Panel>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common administrative tasks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-4">
-            <Button className="justify-start" variant="outline" asChild>
-              <Link to="/super-admin/events">
-                <Calendar className="mr-2 h-4 w-4" />
-                Manage Events
-              </Link>
-            </Button>
-            <Button className="justify-start" variant="outline" asChild>
-              <Link to="/super-admin/users">
-                <Users className="mr-2 h-4 w-4" />
-                Manage Users
-              </Link>
-            </Button>
-            <Button className="justify-start" variant="outline" asChild>
-              <Link to="/placement-admin/companies">
-                <Building2 className="mr-2 h-4 w-4" />
-                Manage Companies
-              </Link>
-            </Button>
-            <Button className="justify-start" variant="outline" asChild>
-              <Link to="/super-admin/settings">
-                <Settings className="mr-2 h-4 w-4" />
-                System Settings
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <Panel
+            title="Recent Users"
+            description="Newly registered users"
+            action={<ViewAllLink to="/super-admin/users" />}
+          >
+            {recentUsers.length > 0 ? (
+              <ul className="space-y-3">
+                {recentUsers.map((user) => (
+                  <li
+                    key={user.id}
+                    className="flex items-center justify-between rounded-2xl bg-background p-4 shadow-extruded-sm transition-all hover:shadow-inset-sm"
+                  >
+                    <div>
+                      <p className="font-semibold">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Badge variant="secondary">{user.department || 'No dept'}</Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center text-muted-foreground py-6">No users registered yet</p>
+            )}
+          </Panel>
+        </div>
+
+        <div className="space-y-6">
+          <Panel title="Live Activity" description="System events">
+            {activity.length > 0 ? <ActivityFeed items={activity} /> : <p className="text-sm text-muted-foreground">No recent activity</p>}
+          </Panel>
+
+          <Panel title="Admin Tools">
+            <QuickToolsGrid
+              items={[
+                { label: 'Events', icon: Calendar, to: '/super-admin/events' },
+                { label: 'Users', icon: Users, to: '/super-admin/users' },
+                { label: 'Companies', icon: Building2, to: '/placement-admin/companies' },
+                { label: 'Settings', icon: Settings, to: '/super-admin/settings' },
+              ]}
+            />
+          </Panel>
+
+          <StatusPill status="operational" label="Operational" />
+        </div>
+      </div>
     </div>
   );
 }

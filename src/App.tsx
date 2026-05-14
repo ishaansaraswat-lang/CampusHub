@@ -25,6 +25,7 @@ import PlacementAdminCompanies from "./pages/placement-admin/CompaniesManagement
 import PlacementAdminJobs from "./pages/placement-admin/JobPostingsManagement";
 import PlacementAdminApplications from "./pages/placement-admin/ApplicationsManagement";
 import PlacementAdminResults from "./pages/placement-admin/ResultsManagement";
+import PlacementAdminStatistics from "./pages/placement-admin/Statistics";
 import EventAdminDashboard from "./pages/event-admin/Dashboard";
 import EventAdminEvents from "./pages/event-admin/EventsManagement";
 import EventAdminRegistrations from "./pages/event-admin/RegistrationsManagement";
@@ -189,6 +190,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
                   <PlacementAdminResults />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/placement-admin/statistics"
+              element={
+                <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
+                  <PlacementAdminStatistics />
                 </ProtectedRoute>
               }
             />

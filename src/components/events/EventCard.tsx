@@ -12,19 +12,19 @@ interface EventCardProps {
   subEventsCount?: number;
 }
 
-const statusColors: Record<string, string> = {
-  upcoming: 'bg-primary/10 text-primary border-primary/20',
-  active: 'bg-green-500/10 text-green-600 border-green-500/20',
-  completed: 'bg-muted text-muted-foreground border-muted',
-  draft: 'bg-muted text-muted-foreground border-muted',
-  cancelled: 'bg-destructive/10 text-destructive border-destructive/20',
+const statusVariant: Record<string, 'default' | 'success' | 'secondary' | 'destructive' | 'warning'> = {
+  upcoming: 'default',
+  active: 'success',
+  completed: 'secondary',
+  draft: 'secondary',
+  cancelled: 'destructive',
 };
 
 export function EventCard({ event, subEventsCount = 0 }: EventCardProps) {
   return (
-    <Link to={`/events/${event.slug}`}>
-      <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
-        <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-muted">
+    <Link to={`/events/${event.slug}`} className="block group">
+      <Card className="h-full overflow-hidden transition-transform group-hover:-translate-y-1">
+        <div className="aspect-video w-full overflow-hidden rounded-t-2xl bg-muted">
           {event.banner_url ? (
             <img
               src={event.banner_url}
@@ -40,7 +40,7 @@ export function EventCard({ event, subEventsCount = 0 }: EventCardProps) {
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="line-clamp-1 text-lg">{event.name}</CardTitle>
-            <Badge variant="outline" className={statusColors[event.status] || ''}>
+            <Badge variant={statusVariant[event.status] || 'secondary'}>
               {event.status}
             </Badge>
           </div>

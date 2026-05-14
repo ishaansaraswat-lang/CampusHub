@@ -58,22 +58,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Defer Supabase calls with setTimeout to prevent deadlock
         if (currentSession?.user) {
+          // Keep loading=true until roles/profile arrive so UI doesn't render
+          // role-gated chrome (sidebar groups, role-specific dashboards) empty.
+          setLoading(true);
           setTimeout(() => {
-            fetchUserData(currentSession.user.id);
+            fetchUserData(currentSession.user.id).finally(() => setLoading(false));
           }, 0);
         } else {
           setProfile(null);
           setRoles([]);
+          setLoading(false);
         }
 
         if (event === 'SIGNED_OUT') {
           setProfile(null);
           setRoles([]);
         }
-
-        setLoading(false);
       }
     );
 
@@ -81,12 +82,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
-      
+
       if (existingSession?.user) {
-        fetchUserData(existingSession.user.id);
+        fetchUserData(existingSession.user.id).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

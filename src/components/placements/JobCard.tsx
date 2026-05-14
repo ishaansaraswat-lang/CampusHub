@@ -13,19 +13,19 @@ interface JobCardProps {
   job: JobPosting;
 }
 
-const statusColors: Record<string, string> = {
-  open: 'bg-green-500/10 text-green-600 border-green-500/20',
-  closed: 'bg-muted text-muted-foreground border-muted',
-  draft: 'bg-muted text-muted-foreground border-muted',
-  filled: 'bg-primary/10 text-primary border-primary/20',
+const statusVariant: Record<string, 'success' | 'secondary' | 'default'> = {
+  open: 'success',
+  closed: 'secondary',
+  draft: 'secondary',
+  filled: 'default',
 };
 
 export function JobCard({ job }: JobCardProps) {
   const isDeadlinePassed = job.deadline ? new Date(job.deadline) < new Date() : false;
 
   return (
-    <Link to={`/placements/${job.id}`}>
-      <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
+    <Link to={`/placements/${job.id}`} className="block group">
+      <Card className="h-full transition-transform group-hover:-translate-y-1">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-3">
@@ -36,7 +36,7 @@ export function JobCard({ job }: JobCardProps) {
                   className="h-10 w-10 rounded-lg object-contain bg-muted p-1"
                 />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-background shadow-inset-sm">
                   <Building2 className="h-5 w-5 text-muted-foreground" />
                 </div>
               )}
@@ -47,7 +47,7 @@ export function JobCard({ job }: JobCardProps) {
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className={statusColors[job.status] || ''}>
+            <Badge variant={statusVariant[job.status] || 'secondary'}>
               {job.status}
             </Badge>
           </div>

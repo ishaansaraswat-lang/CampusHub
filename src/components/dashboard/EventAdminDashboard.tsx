@@ -1,12 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Calendar, Users, Trophy, Image, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  Calendar,
+  Users,
+  Trophy,
+  Image as ImageIcon,
+  Loader2,
+  Megaphone,
+  FileBarChart,
+  ClipboardList,
+  ArrowRight,
+} from 'lucide-react';
 import type { Event } from '@/types/database';
+import {
+  DashboardHeader,
+  StatTile,
+  Panel,
+  ViewAllLink,
+  ActivityFeed,
+  QuickToolsGrid,
+  StatusPill,
+} from './shared';
+import { useActivityFeed } from '@/hooks/useActivityFeed';
 
 interface EventAdminStats {
   assignedEvents: number;
@@ -17,6 +36,7 @@ interface EventAdminStats {
 
 export function EventAdminDashboard() {
   const { profile } = useAuth();
+  const { data: activity } = useActivityFeed('event_admin', profile?.user_id);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<EventAdminStats>({
     assignedEvents: 0,
@@ -29,18 +49,14 @@ export function EventAdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (!profile) return;
-
       try {
-        // Get assigned event IDs
         const { data: coordinatorData } = await supabase
           .from('event_coordinators')
           .select('event_id')
           .eq('user_id', profile.user_id);
-
         const eventIds = coordinatorData?.map((c) => c.event_id) || [];
 
         if (eventIds.length > 0) {
-          // Fetch assigned events
           const { data: eventsData, count: eventsCount } = await supabase
             .from('events')
             .select('*', { count: 'exact' })
@@ -48,29 +64,24 @@ export function EventAdminDashboard() {
             .order('start_date', { ascending: false })
             .limit(5);
 
-          // Get sub-event IDs for these events
           const { data: subEventsData } = await supabase
             .from('sub_events')
             .select('id')
             .in('event_id', eventIds);
-
           const subEventIds = subEventsData?.map((se) => se.id) || [];
 
-          // Count pending registrations
           const { count: pendingCount } = await supabase
             .from('event_registrations')
             .select('*', { count: 'exact', head: true })
             .in('sub_event_id', subEventIds)
             .eq('status', 'pending');
 
-          // Count total participants
           const { count: participantsCount } = await supabase
             .from('event_registrations')
             .select('*', { count: 'exact', head: true })
             .in('sub_event_id', subEventIds)
             .eq('status', 'confirmed');
 
-          // Count published results
           const { count: resultsCount } = await supabase
             .from('event_results')
             .select('*', { count: 'exact', head: true })
@@ -82,7 +93,6 @@ export function EventAdminDashboard() {
             totalParticipants: participantsCount || 0,
             publishedResults: resultsCount || 0,
           });
-
           setMyEvents((eventsData as Event[]) || []);
         }
       } catch (error) {
@@ -91,7 +101,6 @@ export function EventAdminDashboard() {
         setLoading(false);
       }
     };
-
     fetchDashboardData();
   }, [profile]);
 
@@ -105,112 +114,102 @@ export function EventAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Event Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage your assigned events and registrations
-        </p>
+      <DashboardHeader
+        title="Admin Dashboard 👋"
+        subtitle={`Overseeing ${stats.assignedEvents} active event${stats.assignedEvents === 1 ? '' : 's'}.`}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatTile label="Participants" value={stats.totalParticipants} caption="Confirmed registrations" icon={Users} tone="success" />
+        <StatTile label="Pending" value={`${stats.pendingRegistrations} Regs`} caption="Needs attention" icon={ClipboardList} tone="warning" />
+        <StatTile label="Assigned Events" value={stats.assignedEvents} caption="Events you manage" icon={Calendar} />
+        <StatTile label="Published Results" value={stats.publishedResults} caption="Winners announced" icon={Trophy} tone="info" />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assigned Events</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.assignedEvents}</div>
-            <p className="text-xs text-muted-foreground">Events you manage</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Registrations</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingRegistrations}</div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Participants</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalParticipants}</div>
-            <p className="text-xs text-muted-foreground">Confirmed registrations</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Published Results</CardTitle>
-            <Image className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.publishedResults}</div>
-            <p className="text-xs text-muted-foreground">Winners announced</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* My Events */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>My Events</CardTitle>
-              <CardDescription>Events assigned to you</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/admin/events">
-                View all <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {myEvents.length > 0 ? (
-            <div className="space-y-4">
-              {myEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <div>
-                    <p className="font-medium">{event.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {event.start_date
-                        ? new Date(event.start_date).toLocaleDateString()
-                        : 'Date TBD'}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      event.status === 'active'
-                        ? 'default'
-                        : event.status === 'completed'
-                        ? 'secondary'
-                        : 'outline'
-                    }
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <Panel
+            title="Managed Events"
+            description="Events assigned to you"
+            action={<ViewAllLink to="/admin/events" />}
+          >
+            {myEvents.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {myEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="rounded-2xl bg-background p-4 shadow-extruded-sm transition-all hover:-translate-y-0.5 hover:shadow-extruded"
                   >
-                    {event.status}
-                  </Badge>
-                </div>
-              ))}
+                    <div className="flex items-start justify-between gap-2">
+                      <Badge
+                        variant={
+                          event.status === 'active'
+                            ? 'success'
+                            : event.status === 'completed'
+                            ? 'secondary'
+                            : 'default'
+                        }
+                      >
+                        {event.status}
+                      </Badge>
+                    </div>
+                    <p className="mt-3 font-display text-lg font-bold line-clamp-1">{event.name}</p>
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-background px-2.5 py-1 shadow-inset-sm">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {event.start_date ? new Date(event.start_date).toLocaleDateString() : 'Date TBD'}
+                      </span>
+                    </div>
+                    <Link
+                      to={`/admin/events`}
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1.5 text-xs font-semibold text-primary shadow-extruded-xs transition-all hover:shadow-inset-sm"
+                    >
+                      Manage <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-6">No events assigned to you yet</p>
+            )}
+          </Panel>
+
+          <Panel
+            title="Pending Registrations"
+            description="Awaiting your approval"
+            action={
+              <Button size="sm" asChild>
+                <Link to="/admin/registrations">Process All</Link>
+              </Button>
+            }
+          >
+            <div className="rounded-2xl bg-background p-4 shadow-inset-sm text-sm text-muted-foreground">
+              {stats.pendingRegistrations > 0
+                ? `${stats.pendingRegistrations} registrations are waiting for review.`
+                : 'No pending registrations right now.'}
             </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-4">
-              No events assigned to you yet
-            </p>
-          )}
-        </CardContent>
-      </Card>
+          </Panel>
+        </div>
+
+        <div className="space-y-6">
+          <Panel title="Live Activity" description="Recent updates">
+            {activity.length > 0 ? <ActivityFeed items={activity} /> : <p className="text-sm text-muted-foreground">No recent activity</p>}
+          </Panel>
+
+          <Panel title="Admin Tools">
+            <QuickToolsGrid
+              items={[
+                { label: 'Broadcast', icon: Megaphone, to: '/admin/registrations' },
+                { label: 'Reports', icon: FileBarChart, to: '/admin/results' },
+                { label: 'Gallery', icon: ImageIcon, to: '/admin/gallery' },
+                { label: 'Volunteers', icon: Users, to: '/admin/registrations' },
+              ]}
+            />
+          </Panel>
+
+          <StatusPill status="operational" label="Operational" />
+        </div>
+      </div>
     </div>
   );
 }
