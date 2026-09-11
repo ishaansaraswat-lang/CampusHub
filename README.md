@@ -89,6 +89,11 @@ Pending
 
 ![CampusHub Login](./Loginpage.png)
 
+### 📊 Student Dashboard
+
+![CampusHub Student Dashboard](./student-dashboard.png)
+
+
 ---
 ## 🛠️ Tech Stack
 
