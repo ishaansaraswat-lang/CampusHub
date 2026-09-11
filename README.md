@@ -93,6 +93,14 @@ Pending
 
 ![CampusHub Student Dashboard](./student-dashboard.png)
 
+### 🛠️ Event Admin Dashboard
+
+![CampusHub Event Admin Dashboard](./event-admin-dashboard.png)
+
+### 💼 Placement Admin Dashboard
+
+![CampusHub Placement Admin Dashboard](./placement-admin-dashboard.png)
+
 
 ---
 ## 🛠️ Tech Stack
