@@ -1,6 +1,6 @@
 import EventAttendanceQR from '@/components/event-admin/EventAttendanceQR';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import {
@@ -259,6 +259,16 @@ export default function Attendance() {
           </div>
         </div>
 
+
+        <div className="flex justify-end">
+          <Button asChild variant="outline">
+            <Link to={`/admin/events/${eventId}/attendance/analytics`}>
+              <ClipboardCheck className="mr-2 h-4 w-4" />
+              Attendance Analytics
+            </Link>
+          </Button>
+        </div>
+
         {/* Statistics */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -499,3 +509,4 @@ export default function Attendance() {
     </MainLayout>
   );
 }
+
