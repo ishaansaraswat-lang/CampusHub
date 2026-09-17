@@ -13,6 +13,7 @@ import {
   Calendar,
   CheckCircle2,
   Briefcase,
+  BriefcaseBusiness,
   Trophy,
   Mail,
   Phone,
@@ -52,6 +53,23 @@ interface AttendanceRecord {
   checked_in_at: string;
 }
 
+interface EventResult {
+  id: string;
+  position: number;
+  remarks: string | null;
+  team_name: string | null;
+  sub_event_id: string;
+}
+
+interface PlacementResult {
+  id: string;
+  job_id: string;
+  joined: boolean | null;
+  package_offered: number | null;
+  offer_letter_url: string | null;
+  created_at: string;
+}
+
 interface PlacementApplication {
   id: string;
   status: string;
@@ -80,7 +98,12 @@ export default function Student360() {
     PlacementApplication[]
   >([]);
 
+  const [eventResults, setEventResults] = useState<EventResult[]>([]);
+  const [placementResults, setPlacementResults] = useState<PlacementResult[]>([]);
+
   const [search, setSearch] = useState('');
+  const [yearFilter, setYearFilter] = useState('all');
+  const [courseFilter, setCourseFilter] = useState('all');
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
@@ -144,6 +167,15 @@ export default function Student360() {
 
       setAttendance((attendanceData || []) as AttendanceRecord[]);
 
+      // Event results
+      const { data: eventResultsData } = await supabase
+        .from('event_results')
+        .select('id, position, remarks, team_name, sub_event_id')
+        .eq('user_id', student.user_id)
+        .order('position', { ascending: true });
+
+      setEventResults((eventResultsData || []) as EventResult[]);
+
       // Placement applications
       const { data: applications } = await supabase
         .from('placement_applications')
@@ -168,6 +200,15 @@ export default function Student360() {
       setPlacementApplications(
         (applications || []) as unknown as PlacementApplication[]
       );
+
+      // Placement results
+      const { data: placementResultsData } = await supabase
+        .from('placement_results')
+        .select('id, job_id, joined, package_offered, offer_letter_url, created_at')
+        .eq('user_id', student.user_id)
+        .order('created_at', { ascending: false });
+
+      setPlacementResults((placementResultsData || []) as PlacementResult[]);
     } catch (error) {
       console.error('Failed to load student details:', error);
 
@@ -192,17 +233,18 @@ export default function Student360() {
   const filteredStudents = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    if (!query) return students;
-
     return students.filter(
       (student) =>
-        student.name?.toLowerCase().includes(query) ||
-        student.email?.toLowerCase().includes(query) ||
-        student.student_id?.toLowerCase().includes(query) ||
-        student.department?.toLowerCase().includes(query)
+        (
+          student.name?.toLowerCase().includes(query) ||
+          student.email?.toLowerCase().includes(query) ||
+          student.student_id?.toLowerCase().includes(query) ||
+          student.department?.toLowerCase().includes(query)
+        ) &&
+        (yearFilter === 'all' || String(student.year) === yearFilter) &&
+        (courseFilter === 'all' || student.department === courseFilter)
     );
-  }, [students, search]);
-
+  }, [students, search, yearFilter, courseFilter]);
   const presentCount = attendance.filter(
     (record) => record.status === 'present'
   ).length;
@@ -277,6 +319,35 @@ export default function Student360() {
                   className="pl-9"
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-3">
+                <select
+                  value={yearFilter}
+                  onChange={(e) => setYearFilter(e.target.value)}
+                  className="h-10 rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="all">All Years</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+
+                <select
+                  value={courseFilter}
+                  onChange={(e) => setCourseFilter(e.target.value)}
+                  className="h-10 rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="all">All Courses</option>
+                  {Array.from(new Set(students.map((s) => s.department).filter(Boolean))).map((course) => (
+                    <option key={course} value={course!}>{course}</option>
+                  ))}
+                </select>
+              </div>
+
+              <p className="pt-3 text-xs text-muted-foreground">
+                Showing <span className="font-semibold text-foreground">{filteredStudents.length}</span> of {students.length} students
+              </p>
             </CardHeader>
 
             <CardContent className="max-h-[620px] space-y-2 overflow-y-auto">
@@ -572,6 +643,37 @@ export default function Student360() {
                     {/* Attendance */}
                     <Card>
                       <CardHeader>
+                        <CardTitle>Event Results</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {eventResults.length === 0 ? (
+                          <p className="py-6 text-center text-muted-foreground">
+                            No event results recorded.
+                          </p>
+                        ) : (
+                          eventResults.map((result) => (
+                            <div
+                              key={result.id}
+                              className="flex items-center justify-between rounded-lg border p-3"
+                            >
+                              <div>
+                                <p className="font-medium">Position: #{result.position}</p>
+                                {result.team_name && (
+                                  <p className="text-sm text-muted-foreground">Team: {result.team_name}</p>
+                                )}
+                                {result.remarks && (
+                                  <p className="text-sm text-muted-foreground">{result.remarks}</p>
+                                )}
+                              </div>
+                              <Trophy className="h-5 w-5 text-yellow-500" />
+                            </div>
+                          ))
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
                         <CardTitle>
                           Attendance Summary
                         </CardTitle>
@@ -618,6 +720,38 @@ export default function Student360() {
                     </Card>
 
                     {/* Placement */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Placement Results</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {placementResults.length === 0 ? (
+                          <p className="py-6 text-center text-muted-foreground">
+                            No placement results recorded.
+                          </p>
+                        ) : (
+                          placementResults.map((result) => (
+                            <div
+                              key={result.id}
+                              className="flex items-center justify-between rounded-lg border p-3"
+                            >
+                              <div>
+                                <p className="font-medium">
+                                  {result.joined ? 'Joined' : 'Offer Recorded'}
+                                </p>
+                                {result.package_offered !== null && (
+                                  <p className="text-sm text-muted-foreground">
+                                    Package: ?{result.package_offered} LPA
+                                  </p>
+                                )}
+                              </div>
+                              <BriefcaseBusiness className="h-5 w-5" />
+                            </div>
+                          ))
+                        )}
+                      </CardContent>
+                    </Card>
+
                     <Card className="xl:col-span-2">
                       <CardHeader>
                         <CardTitle>
@@ -701,5 +835,16 @@ export default function Student360() {
     </MainLayout>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
