@@ -152,9 +152,7 @@ export function AppSidebar() {
       url: '/admissions/analytics',
       icon: BarChart3,
     },
-  ];
-
-  const superAdminNav: NavItem[] = [
+  ];  const superAdminNav: NavItem[] = [
     {
       title: 'Dashboard',
       url: '/super-admin/dashboard',
@@ -168,6 +166,11 @@ export function AppSidebar() {
     {
       title: 'Users',
       url: '/super-admin/users',
+      icon: Users,
+    },
+    {
+      title: 'Student 360',
+      url: '/super-admin/students',
       icon: Users,
     },
     {
@@ -309,3 +312,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+

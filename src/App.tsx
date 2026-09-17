@@ -1,5 +1,6 @@
 import AttendanceCheckIn from "./pages/attendance/CheckIn";
 import AttendanceAnalytics from "./pages/event-admin/AttendanceAnalytics";
+import Student360 from "./pages/super-admin/Student360";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -290,7 +291,15 @@ const App = () => (
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
+                <Route
+        path="/super-admin/students"
+        element={
+          <ProtectedRoute allowedRoles={['super_admin']}>
+            <Student360 />
+          </ProtectedRoute>
+        }
+      />
+</Routes>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
@@ -298,6 +307,8 @@ const App = () => (
 );
 
 export default App;
+
+
 
 
 
