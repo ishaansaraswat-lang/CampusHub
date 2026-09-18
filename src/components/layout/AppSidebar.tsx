@@ -182,12 +182,12 @@ export function AppSidebar() {
 
   const renderNavGroup = (title: string, items: NavItem[]) => (
     <SidebarGroup key={title}>
-      <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <SidebarGroupLabel className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
         {title}
       </SidebarGroupLabel>
 
       <SidebarGroupContent>
-        <SidebarMenu className="gap-2">
+        <SidebarMenu className="gap-1.5">
           {items.map((item) => {
             const active = location.pathname === item.url;
 
@@ -196,10 +196,10 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   className={cn(
-                    'h-12 rounded-2xl px-4 font-medium transition-all duration-300',
+                    'h-11 rounded-xl px-4 font-medium transition-all duration-200',
                     active
-                      ? 'shadow-inset text-primary hover:text-primary'
-                      : 'text-muted-foreground hover:text-primary hover:shadow-inset-sm hover:bg-transparent',
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-500 hover:text-white'
+                      : 'text-slate-300 hover:bg-white/5 hover:text-white',
                   )}
                 >
                   <Link to={item.url}>
@@ -225,20 +225,20 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-none bg-background">
-      <SidebarHeader className="bg-background">
-        <div className="flex items-center gap-3 px-4 py-5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-extruded-sm">
+    <Sidebar className="border-none bg-[#0B1220] text-white">
+      <SidebarHeader className="bg-[#0B1220] border-b border-white/10">
+        <div className="flex items-center gap-3 px-4 py-6">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/25">
             <GraduationCap className="h-5 w-5" />
           </div>
 
-          <h1 className="font-display text-xl font-bold tracking-tight">
+          <h1 className="font-display text-xl font-bold tracking-tight text-white">
             CampusFlow
           </h1>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-background px-3">
+      <SidebarContent className="bg-[#0B1220] px-3 py-4">
         {isStudent && renderNavGroup('Student', studentNav)}
 
         {isEventAdmin && renderNavGroup('Event Admin', eventAdminNav)}
@@ -251,19 +251,19 @@ export function AppSidebar() {
         {isSuperAdmin && renderNavGroup('Super Admin', superAdminNav)}
       </SidebarContent>
 
-      <SidebarFooter className="bg-background p-3">
-        <SidebarMenu className="gap-2">
+      <SidebarFooter className="bg-[#0B1220] border-t border-white/10 p-3">
+        <SidebarMenu className="gap-1.5">
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="h-auto rounded-2xl bg-background p-3 shadow-extruded-sm transition-all hover:bg-background hover:shadow-inset-sm data-[state=open]:shadow-inset-sm"
+                  className="h-auto rounded-xl border border-white/10 bg-white/5 p-3 transition-all hover:bg-white/10 data-[state=open]:bg-white/10"
                 >
-                  <Avatar className="h-9 w-9 shadow-extruded-sm">
+                  <Avatar className="h-9 w-9 ring-2 ring-white/10">
                     <AvatarImage src={profile?.avatar_url || undefined} />
 
-                    <AvatarFallback className="bg-background text-primary">
+                    <AvatarFallback className="bg-blue-600 text-white">
                       {profile?.name
                         ? getInitials(profile.name)
                         : 'U'}
@@ -301,7 +301,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={signOut}
-              className="h-12 rounded-2xl bg-background px-4 font-medium text-muted-foreground shadow-extruded-sm transition-all hover:bg-background hover:text-destructive hover:shadow-inset-sm active:shadow-inset"
+              className="h-11 rounded-xl px-4 font-medium text-slate-300 transition-all hover:bg-red-500/10 hover:text-red-400"
             >
               <LogOut className="h-5 w-5" />
               <span>Sign Out</span>
@@ -312,4 +312,7 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+
+
 
