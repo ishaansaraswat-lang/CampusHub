@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+﻿import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/useRole';
 import { useAuth } from '@/contexts/AuthContext';
@@ -233,7 +233,7 @@ export function AppSidebar() {
           </div>
 
           <h1 className="font-display text-xl font-bold tracking-tight text-white">
-            CampusFlow
+            CampusHub
           </h1>
         </div>
       </SidebarHeader>
@@ -312,6 +312,7 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
 
 
 

@@ -56,7 +56,7 @@ interface PanelProps {
 
 export function Panel({ title, description, action, children, className }: PanelProps) {
   return (
-    <section className={cn('rounded-2xl bg-background p-6 shadow-extruded', className)}>
+    <section className={cn('rounded-2xl border border-border/70 bg-card p-6 shadow-sm transition-shadow duration-300 hover:shadow-md', className)}>
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-xl font-bold tracking-tight">{title}</h2>
@@ -132,7 +132,7 @@ export function QuickToolsGrid({ items }: { items: QuickToolItem[] }) {
         <Link
           key={label}
           to={to}
-          className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-background p-4 text-center shadow-extruded-sm transition-all hover:shadow-inset-sm active:shadow-inset"
+          className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card p-4 text-center shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md active:translate-y-0"
         >
           <Icon className="h-5 w-5 text-primary" />
           <span className="text-xs font-semibold">{label}</span>
@@ -158,4 +158,5 @@ export function StatusPill({ status, label }: { status: 'operational' | 'degrade
     </div>
   );
 }
+
 

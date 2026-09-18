@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -169,13 +169,17 @@ export function SuperAdminDashboard() {
       : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <DashboardHeader
         title="Super Admin Dashboard"
         subtitle="Central overview of CampusHub operations."
       />
 
-      {/* Campus Overview */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-foreground">Campus Overview</h2>
+          <p className="text-sm text-muted-foreground">A quick snapshot of campus activity and resources.</p>
+        </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Total Users"
@@ -209,7 +213,13 @@ export function SuperAdminDashboard() {
         />
       </div>
 
-      {/* Admissions + Placement Overview */}
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-foreground">Admissions & Placement</h2>
+          <p className="text-sm text-muted-foreground">Track admissions performance and placement activity.</p>
+        </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Admission Applications"
@@ -243,6 +253,8 @@ export function SuperAdminDashboard() {
           tone="success"
         />
       </div>
+
+      </section>
 
       {/* Module Overview */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -431,7 +443,7 @@ export function SuperAdminDashboard() {
                 {recentEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="rounded-2xl bg-background p-4 shadow-extruded-sm transition-all hover:-translate-y-0.5 hover:shadow-extruded"
+                    className="rounded-xl border border-border/60 bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <Badge
@@ -479,7 +491,7 @@ export function SuperAdminDashboard() {
                 {recentUsers.map((user) => (
                   <li
                     key={user.id}
-                    className="flex items-center justify-between rounded-2xl bg-background p-4 shadow-extruded-sm transition-all hover:shadow-inset-sm"
+                    className="flex items-center justify-between rounded-xl border border-border/60 bg-card p-4 shadow-sm transition-all duration-300 hover:border-primary/20 hover:shadow-md"
                   >
                     <div>
                       <p className="font-semibold">{user.name}</p>
@@ -502,7 +514,7 @@ export function SuperAdminDashboard() {
           </Panel>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           <Panel
             title="Live Activity"
             description="Recent system events"
@@ -552,3 +564,10 @@ export function SuperAdminDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
