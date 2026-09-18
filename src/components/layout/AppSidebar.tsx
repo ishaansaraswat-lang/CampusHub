@@ -245,8 +245,7 @@ export function AppSidebar() {
 
         {isPlacementCell && renderNavGroup('Placement Cell', placementNav)}
 
-        {(isAdmissionsCell || isSuperAdmin) &&
-          renderNavGroup('Admissions Cell', admissionsNav)}
+        {isAdmissionsCell && renderNavGroup('Admissions Cell', admissionsNav)}
 
         {isSuperAdmin && renderNavGroup('Super Admin', superAdminNav)}
       </SidebarContent>
@@ -312,6 +311,7 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
 
 
 

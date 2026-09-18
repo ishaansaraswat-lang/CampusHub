@@ -1,4 +1,4 @@
-import AttendanceCheckIn from "./pages/attendance/CheckIn";
+﻿import AttendanceCheckIn from "./pages/attendance/CheckIn";
 import AttendanceAnalytics from "./pages/event-admin/AttendanceAnalytics";
 import Student360 from "./pages/super-admin/Student360";
 import { Toaster } from "@/components/ui/toaster";
@@ -162,7 +162,7 @@ const App = () => (
             <Route
               path="/placement-admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['placement_cell']}>
                   <PlacementAdminDashboard />
                 </ProtectedRoute>
               }
@@ -171,7 +171,7 @@ const App = () => (
              <Route
              path="/admissions/manage"
              element={
-             <ProtectedRoute allowedRoles={['admissions_cell', 'super_admin']}>
+             <ProtectedRoute allowedRoles={['admissions_cell']}>
              <AdmissionsManagement />
              </ProtectedRoute>
               }
@@ -180,7 +180,7 @@ const App = () => (
             <Route
             path="/admissions/analytics"
             element={
-            <ProtectedRoute allowedRoles={['admissions_cell', 'super_admin']}>
+            <ProtectedRoute allowedRoles={['admissions_cell']}>
             <AdmissionsAnalytics />
             </ProtectedRoute>
             }
@@ -188,7 +188,7 @@ const App = () => (
             <Route
               path="/placement-admin/companies"
               element={
-                <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['placement_cell']}>
                   <PlacementAdminCompanies />
                 </ProtectedRoute>
               }
@@ -196,7 +196,7 @@ const App = () => (
             <Route
               path="/placement-admin/jobs"
               element={
-                <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['placement_cell']}>
                   <PlacementAdminJobs />
                 </ProtectedRoute>
               }
@@ -204,7 +204,7 @@ const App = () => (
             <Route
               path="/placement-admin/applications"
               element={
-                <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['placement_cell']}>
                   <PlacementAdminApplications />
                 </ProtectedRoute>
               }
@@ -212,7 +212,7 @@ const App = () => (
             <Route
               path="/placement-admin/results"
               element={
-                <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['placement_cell']}>
                   <PlacementAdminResults />
                 </ProtectedRoute>
               }
@@ -220,7 +220,7 @@ const App = () => (
             <Route
               path="/placement-admin/statistics"
               element={
-                <ProtectedRoute allowedRoles={['placement_cell', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['placement_cell']}>
                   <PlacementAdminStatistics />
                 </ProtectedRoute>
               }
@@ -230,7 +230,7 @@ const App = () => (
             <Route
               path="/admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['event_admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['event_admin']}>
                   <EventAdminDashboard />
                 </ProtectedRoute>
               }
@@ -238,7 +238,7 @@ const App = () => (
             <Route
               path="/admin/events"
               element={
-                <ProtectedRoute allowedRoles={['event_admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['event_admin']}>
                   <EventAdminEvents />
                 </ProtectedRoute>
               }
@@ -246,7 +246,7 @@ const App = () => (
             <Route
               path="/admin/registrations"
               element={
-                <ProtectedRoute allowedRoles={['event_admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['event_admin']}>
                   <EventAdminRegistrations />
                 </ProtectedRoute>
               }
@@ -254,7 +254,7 @@ const App = () => (
             <Route
               path="/admin/results"
               element={
-                <ProtectedRoute allowedRoles={['event_admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['event_admin']}>
                   <EventAdminResults />
                 </ProtectedRoute>
               }
@@ -262,14 +262,14 @@ const App = () => (
             <Route
               path="/admin/gallery"
               element={
-                <ProtectedRoute allowedRoles={['event_admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['event_admin']}>
                   <EventAdminGallery />
                 </ProtectedRoute>
               }
             />            <Route
               path="/admin/events/:eventId/attendance"
               element={
-                <ProtectedRoute allowedRoles={['event_admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['event_admin']}>
                   <EventAdminAttendance />
                 </ProtectedRoute>
               }
@@ -283,7 +283,7 @@ const App = () => (
 <Route
               path="/admin/events/:id/sub-events"
               element={
-                <ProtectedRoute allowedRoles={['event_admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['event_admin']}>
                   <EventAdminSubEvents />
                 </ProtectedRoute>
               }
@@ -307,6 +307,10 @@ const App = () => (
 );
 
 export default App;
+
+
+
+
 
 
 
