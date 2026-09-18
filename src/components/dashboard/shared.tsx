@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { ArrowRight, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,15 +33,15 @@ export function StatTile({ label, value, caption, icon: Icon, tone = 'primary' }
   }[tone];
 
   return (
-    <div className="rounded-2xl bg-background p-5 shadow-extruded transition-all duration-300 hover:-translate-y-0.5">
-      <div className="flex items-center gap-3">
-        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl shadow-inset-sm', toneClass)}>
+    <div className="group relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+      <div className="flex items-center justify-between gap-3">
+        <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted transition-all duration-300 group-hover:scale-105', toneClass)}>
           <Icon className="h-5 w-5" />
         </div>
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
       </div>
-      <div className="mt-4 font-display text-3xl font-bold tracking-tight">{value}</div>
-      {caption && <p className="mt-1 text-xs text-muted-foreground">{caption}</p>}
+      <div className="mt-5 font-display text-3xl font-bold tracking-tight text-foreground">{value}</div>
+      {caption && <p className="mt-1.5 text-xs font-medium text-muted-foreground">{caption}</p>}
     </div>
   );
 }
@@ -158,3 +158,4 @@ export function StatusPill({ status, label }: { status: 'operational' | 'degrade
     </div>
   );
 }
+
