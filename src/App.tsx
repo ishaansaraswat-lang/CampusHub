@@ -25,6 +25,8 @@ import SuperAdminSubEvents from "./pages/super-admin/SubEventsManagement";
 import SuperAdminCoordinators from "./pages/super-admin/CoordinatorsManagement";
 import SuperAdminUsers from "./pages/super-admin/UsersManagement";
 import SuperAdminSettings from "./pages/super-admin/Settings";
+import PlacementOverview from "./pages/super-admin/PlacementOverview";
+import AdmissionsOverview from "./pages/super-admin/AdmissionsOverview";
 import PlacementAdminDashboard from "./pages/placement-admin/Dashboard";
 import PlacementAdminCompanies from "./pages/placement-admin/CompaniesManagement";
 import PlacementAdminJobs from "./pages/placement-admin/JobPostingsManagement";
@@ -158,6 +160,22 @@ const App = () => (
               }
             />
             
+            <Route
+              path="/super-admin/placement"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <PlacementOverview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/super-admin/admissions"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <AdmissionsOverview />
+                </ProtectedRoute>
+              }
+            />
             {/* Placement Admin Routes */}
             <Route
               path="/placement-admin/dashboard"
@@ -307,6 +325,8 @@ const App = () => (
 );
 
 export default App;
+
+
 
 
 

@@ -1,18 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft,
+  ArrowUpRight,
+  BarChart3,
   CheckCircle2,
   ClipboardCheck,
   Download,
@@ -20,6 +17,8 @@ import {
   Users,
   XCircle,
   Clock,
+  TrendingUp,
+  UserCheck,
 } from 'lucide-react';
 
 interface AttendanceRow {
@@ -56,10 +55,11 @@ export default function AttendanceAnalytics() {
 
         setEventName(event.name);
 
-        const { data: subEvents, error: subEventError } = await supabase
-          .from('sub_events')
-          .select('id')
-          .eq('event_id', eventId);
+        const { data: subEvents, error: subEventError } =
+          await supabase
+            .from('sub_events')
+            .select('id')
+            .eq('event_id', eventId);
 
         if (subEventError) throw subEventError;
 
@@ -101,11 +101,12 @@ export default function AttendanceAnalytics() {
 
         const profileIds = (profiles || []).map((profile) => profile.id);
 
-        const { data: attendance, error: attendanceError } = await supabase
-          .from('event_attendance')
-          .select('student_id, status, checked_in_at')
-          .eq('event_id', eventId)
-          .in('student_id', profileIds);
+        const { data: attendance, error: attendanceError } =
+          await supabase
+            .from('event_attendance')
+            .select('student_id, status, checked_in_at')
+            .eq('event_id', eventId)
+            .in('student_id', profileIds);
 
         if (attendanceError) throw attendanceError;
 
@@ -151,11 +152,12 @@ export default function AttendanceAnalytics() {
 
     if (!query) return rows;
 
-    return rows.filter(
-      (row) =>
-        row.name.toLowerCase().includes(query) ||
-        row.email.toLowerCase().includes(query) ||
-        row.department?.toLowerCase().includes(query)
+    return rows.filter((row) =>
+      [
+        row.name,
+        row.email,
+        row.department,
+      ].some((value) => value?.toLowerCase().includes(query))
     );
   }, [rows, search]);
 
@@ -195,10 +197,7 @@ export default function AttendanceAnalytics() {
         : '',
     ]);
 
-    const csv = [
-      headers,
-      ...data,
-    ]
+    const csv = [headers, ...data]
       .map((row) =>
         row
           .map((value) => `"${String(value).replace(/"/g, '""')}"`)
@@ -219,221 +218,301 @@ export default function AttendanceAnalytics() {
       .toLowerCase()}-attendance.csv`;
 
     link.click();
-
     URL.revokeObjectURL(url);
   };
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="mb-2 -ml-2"
-          >
-            <Link to={`/admin/events/${eventId}/attendance`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Attendance
-            </Link>
-          </Button>
+      <div className="space-y-8">
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
+          <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-blue-400/10 blur-3xl" />
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">
-                Attendance Analytics
-              </h1>
-
-              <p className="mt-1 text-muted-foreground">
-                {eventName || 'Event'} — attendance overview and report
-              </p>
-            </div>
-
+          <div className="relative">
             <Button
-              onClick={exportCSV}
-              disabled={rows.length === 0}
+              variant="ghost"
+              size="sm"
+              asChild
+              className="-ml-2 mb-4 rounded-xl"
             >
-              <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              <Link to={`/admin/events/${eventId}/attendance`}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Attendance
+              </Link>
             </Button>
+
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  Attendance Analytics
+                </div>
+
+                <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                  Attendance Analytics
+                </h1>
+
+                <p className="mt-2 text-muted-foreground">
+                  {eventName || 'Event'} — attendance overview and report
+                </p>
+              </div>
+
+              <Button
+                onClick={exportCSV}
+                disabled={rows.length === 0}
+                className="rounded-xl shadow-sm"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* KPI Cards */}
+        {/* KPI */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-primary/10 p-3">
-                <Users className="h-5 w-5 text-primary" />
+          <StatCard
+            label="Registered"
+            value={total}
+            icon={Users}
+            iconClass="bg-primary/10 text-primary"
+          />
+
+          <StatCard
+            label="Present"
+            value={present}
+            icon={CheckCircle2}
+            iconClass="bg-emerald-500/10 text-emerald-600"
+          />
+
+          <StatCard
+            label="Absent"
+            value={absent}
+            icon={XCircle}
+            iconClass="bg-red-500/10 text-red-600"
+          />
+
+          <StatCard
+            label="Pending"
+            value={pending}
+            icon={Clock}
+            iconClass="bg-amber-500/10 text-amber-600"
+          />
+
+          <StatCard
+            label="Attendance Rate"
+            value={`${attendanceRate.toFixed(1)}%`}
+            icon={TrendingUp}
+            iconClass="bg-blue-500/10 text-blue-600"
+          />
+        </div>
+
+        {/* Overview */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="rounded-2xl border-border/70 shadow-sm lg:col-span-2">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Overall Attendance
+                  </p>
+                  <p className="mt-1 text-3xl font-bold">
+                    {attendanceRate.toFixed(1)}%
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-primary/10 p-3">
+                  <UserCheck className="h-6 w-6 text-primary" />
+                </div>
               </div>
 
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Registered
-                </p>
-                <p className="text-2xl font-bold">
-                  {total}
-                </p>
+              <div className="mt-5 h-3 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500"
+                  style={{
+                    width: `${Math.min(attendanceRate, 100)}%`,
+                  }}
+                />
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-5 text-sm">
+                <span className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  Present: {present}
+                </span>
+
+                <span className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                  Absent: {absent}
+                </span>
+
+                <span className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                  Pending: {pending}
+                </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-green-500/10 p-3">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
-
+          <Card className="rounded-2xl border-border/70 bg-primary text-primary-foreground shadow-sm">
+            <CardContent className="flex h-full flex-col justify-between p-6">
               <div>
-                <p className="text-sm text-muted-foreground">
-                  Present
-                </p>
-                <p className="text-2xl font-bold">
-                  {present}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mb-4 w-fit rounded-xl bg-white/15 p-3">
+                  <ClipboardCheck className="h-6 w-6" />
+                </div>
 
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-red-500/10 p-3">
-                <XCircle className="h-5 w-5 text-red-600" />
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Absent
+                <p className="text-sm text-primary-foreground/70">
+                  Attendance Summary
                 </p>
-                <p className="text-2xl font-bold">
-                  {absent}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-amber-500/10 p-3">
-                <Clock className="h-5 w-5 text-amber-600" />
+                <p className="mt-2 text-2xl font-bold">
+                  {present} of {total}
+                </p>
+
+                <p className="mt-1 text-sm text-primary-foreground/70">
+                  registered students marked present
+                </p>
               </div>
 
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Pending
-                </p>
-                <p className="text-2xl font-bold">
-                  {pending}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-blue-500/10 p-3">
-                <ClipboardCheck className="h-5 w-5 text-blue-600" />
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Attendance Rate
-                </p>
-                <p className="text-2xl font-bold">
-                  {attendanceRate.toFixed(1)}%
-                </p>
-              </div>
+              <Button
+                asChild
+                variant="secondary"
+                className="mt-6 w-full rounded-xl"
+              >
+                <Link to={`/admin/events/${eventId}/attendance`}>
+                  Manage Attendance
+                  <ArrowUpRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Student Report */}
-        <Card>
-          <CardHeader>
+        {/* Report */}
+        <Card className="overflow-hidden rounded-2xl border-border/70 shadow-sm">
+          <CardHeader className="border-b border-border/60 bg-muted/10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle>Attendance Report</CardTitle>
+              <div>
+                <CardTitle className="text-xl">
+                  Student Report
+                </CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Detailed attendance and check-in information.
+                </p>
+              </div>
 
               <div className="relative w-full sm:w-80">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
                 <Input
                   value={search}
                   onChange={(event) =>
                     setSearch(event.target.value)
                   }
                   placeholder="Search student..."
-                  className="pl-9"
+                  className="h-10 rounded-xl border-border/70 bg-background pl-9"
                 />
               </div>
             </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             {loading ? (
-              <div className="py-12 text-center text-muted-foreground">
-                Loading attendance report...
+              <div className="flex min-h-[280px] flex-col items-center justify-center gap-3">
+                <div className="rounded-2xl bg-primary/10 p-4">
+                  <BarChart3 className="h-7 w-7 animate-pulse text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Loading attendance report...
+                </p>
               </div>
             ) : filteredRows.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
-                No attendance records found.
+              <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
+                <div className="mb-4 rounded-2xl bg-muted p-4">
+                  <Search className="h-7 w-7 text-muted-foreground" />
+                </div>
+                <p className="font-semibold">
+                  No attendance records found
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Try changing your search term.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {filteredRows.map((row) => (
                   <div
                     key={row.studentId}
-                    className="flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="group flex flex-col gap-4 rounded-2xl border border-border/60 bg-background p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold">
-                          {row.name}
-                        </p>
-
-                        {row.status === 'present' && (
-                          <Badge variant="success">
-                            Present
-                          </Badge>
-                        )}
-
-                        {row.status === 'absent' && (
-                          <Badge variant="destructive">
-                            Absent
-                          </Badge>
-                        )}
-
-                        {row.status === 'pending' && (
-                          <Badge variant="outline">
-                            Pending
-                          </Badge>
-                        )}
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                        {row.name?.charAt(0)?.toUpperCase() || 'S'}
                       </div>
 
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {row.email}
-                      </p>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-semibold">
+                            {row.name}
+                          </p>
 
-                      {row.department && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {row.department}
+                          {row.status === 'present' && (
+                            <Badge className="rounded-full bg-emerald-100 px-2.5 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                              Present
+                            </Badge>
+                          )}
+
+                          {row.status === 'absent' && (
+                            <Badge className="rounded-full bg-red-100 px-2.5 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                              Absent
+                            </Badge>
+                          )}
+
+                          {row.status === 'pending' && (
+                            <Badge
+                              variant="outline"
+                              className="rounded-full"
+                            >
+                              Pending
+                            </Badge>
+                          )}
+                        </div>
+
+                        <p className="mt-1 truncate text-sm text-muted-foreground">
+                          {row.email}
                         </p>
-                      )}
+
+                        {row.department && (
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {row.department}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="text-left text-sm sm:text-right">
-                      <p className="text-muted-foreground">
-                        Check-in Time
-                      </p>
+                    <div className="flex items-center gap-4 sm:text-right">
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          Check-in Time
+                        </p>
+                        <p className="mt-1 text-sm font-medium">
+                          {row.checkedInAt
+                            ? new Date(
+                                row.checkedInAt
+                              ).toLocaleString()
+                            : '—'}
+                        </p>
+                      </div>
 
-                      <p className="font-medium">
-                        {row.checkedInAt
-                          ? new Date(
-                              row.checkedInAt
-                            ).toLocaleString()
-                          : '—'}
-                      </p>
+                      <div className="hidden rounded-xl bg-muted/60 p-2 sm:block">
+                        {row.status === 'present' ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : row.status === 'absent' ? (
+                          <XCircle className="h-4 w-4 text-red-600" />
+                        ) : (
+                          <Clock className="h-4 w-4 text-amber-600" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -443,5 +522,38 @@ export default function AttendanceAnalytics() {
         </Card>
       </div>
     </MainLayout>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  iconClass,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ElementType;
+  iconClass: string;
+}) {
+  return (
+    <Card className="group relative overflow-hidden rounded-2xl border-border/70 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="absolute left-0 top-0 h-1 w-full bg-primary/70" />
+
+      <CardContent className="flex items-center gap-4 p-5 pt-6">
+        <div className={`rounded-xl p-3 ${iconClass}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-sm text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-1 text-2xl font-bold tracking-tight">
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

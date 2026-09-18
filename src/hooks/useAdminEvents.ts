@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -292,11 +292,23 @@ export function useRemoveCoordinator() {
 // Fetch all users for coordinator assignment
 export function useAllProfiles() {
   return useQuery({
-    queryKey: ['allProfiles'],
+    queryKey: ['studentProfiles'],
     queryFn: async () => {
+      const { data: studentRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'student');
+
+      if (rolesError) throw rolesError;
+
+      const studentUserIds = studentRoles?.map((role) => role.user_id) || [];
+
+      if (studentUserIds.length === 0) return [];
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .in('user_id', studentUserIds)
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -304,7 +316,6 @@ export function useAllProfiles() {
     },
   });
 }
-
 // Get users with event_admin role for quick assignment
 export function useEventAdmins() {
   return useQuery({
@@ -320,3 +331,4 @@ export function useEventAdmins() {
     },
   });
 }
+

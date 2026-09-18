@@ -1,19 +1,15 @@
-import EventAttendanceQR from '@/components/event-admin/EventAttendanceQR';
+﻿import EventAttendanceQR from '@/components/event-admin/EventAttendanceQR';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   ArrowLeft,
+  ArrowUpRight,
   Calendar,
   CheckCircle2,
   ClipboardCheck,
@@ -21,6 +17,9 @@ import {
   Search,
   Users,
   XCircle,
+  QrCode,
+  BarChart3,
+  UserCheck,
 } from 'lucide-react';
 
 interface Student {
@@ -42,10 +41,8 @@ export default function Attendance() {
 
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState<string | null>(null);
-
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Record<string, string>>({});
-
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingStudent, setSavingStudent] = useState<string | null>(null);
@@ -57,7 +54,6 @@ export default function Attendance() {
       try {
         setLoading(true);
 
-        // 1. Fetch event
         const { data: event, error: eventError } = await supabase
           .from('events')
           .select('id, name, start_date')
@@ -69,7 +65,6 @@ export default function Attendance() {
         setEventName(event.name);
         setEventDate(event.start_date);
 
-        // 2. Fetch sub-events belonging to this event
         const { data: subEvents, error: subEventsError } =
           await supabase
             .from('sub_events')
@@ -88,7 +83,6 @@ export default function Attendance() {
           return;
         }
 
-        // 3. Fetch registrations through sub_event_id
         const { data: registrations, error: registrationsError } =
           await supabase
             .from('event_registrations')
@@ -111,7 +105,6 @@ export default function Attendance() {
           return;
         }
 
-        // 4. Fetch profiles using user_id
         const { data: profiles, error: profilesError } =
           await supabase
             .from('profiles')
@@ -122,10 +115,8 @@ export default function Attendance() {
         if (profilesError) throw profilesError;
 
         const studentList = (profiles || []) as Student[];
-
         setStudents(studentList);
 
-        // 5. Fetch existing attendance
         const studentProfileIds = studentList.map(
           (student) => student.id
         );
@@ -168,13 +159,13 @@ export default function Attendance() {
 
     if (!query) return students;
 
-    return students.filter((student) => {
-      return (
-        student.name?.toLowerCase().includes(query) ||
-        student.email?.toLowerCase().includes(query) ||
-        student.department?.toLowerCase().includes(query)
-      );
-    });
+    return students.filter((student) =>
+      [
+        student.name,
+        student.email,
+        student.department,
+      ].some((value) => value?.toLowerCase().includes(query))
+    );
   }, [students, search]);
 
   const presentCount = students.filter(
@@ -230,158 +221,165 @@ export default function Attendance() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-2 -ml-2"
-            onClick={() => navigate('/admin/events')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Events
-          </Button>
+      <div className="space-y-8">
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
+          <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-blue-400/10 blur-3xl" />
 
-          <h1 className="text-3xl font-bold">Event Attendance</h1>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-ml-2 mb-4 rounded-xl"
+              onClick={() => navigate('/admin/events')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Events
+            </Button>
 
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {eventName || 'Event'}
-            </span>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  Attendance Management
+                </div>
 
-            {eventDate && (
-              <span className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {new Date(eventDate).toLocaleDateString()}
-              </span>
-            )}
+                <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                  Event Attendance
+                </h1>
+
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                  <span className="font-semibold text-foreground">
+                    {eventName || 'Event'}
+                  </span>
+
+                  {eventDate && (
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(eventDate).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                asChild
+                className="rounded-xl shadow-sm"
+              >
+                <Link
+                  to={`/admin/events/${eventId}/attendance/analytics`}
+                >
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Attendance Analytics
+                  <ArrowUpRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
 
-
-        <div className="flex justify-end">
-          <Button asChild variant="outline">
-            <Link to={`/admin/events/${eventId}/attendance/analytics`}>
-              <ClipboardCheck className="mr-2 h-4 w-4" />
-              Attendance Analytics
-            </Link>
-          </Button>
-        </div>
-
-        {/* Statistics */}
+        {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-primary/10 p-3">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
+          <StatCard
+            label="Registered"
+            value={students.length}
+            icon={Users}
+            iconClass="bg-primary/10 text-primary"
+          />
 
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Registered
-                </p>
-                <p className="text-2xl font-bold">
-                  {students.length}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            label="Present"
+            value={presentCount}
+            icon={CheckCircle2}
+            iconClass="bg-emerald-500/10 text-emerald-600"
+          />
 
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-green-500/10 p-3">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
+          <StatCard
+            label="Absent"
+            value={absentCount}
+            icon={XCircle}
+            iconClass="bg-red-500/10 text-red-600"
+          />
 
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Present
-                </p>
-                <p className="text-2xl font-bold">
-                  {presentCount}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-red-500/10 p-3">
-                <XCircle className="h-5 w-5 text-red-600" />
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Absent
-                </p>
-                <p className="text-2xl font-bold">
-                  {absentCount}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-blue-500/10 p-3">
-                <ClipboardCheck className="h-5 w-5 text-blue-600" />
-              </div>
-
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Attendance Rate
-                </p>
-                <p className="text-2xl font-bold">
-                  {attendancePercentage.toFixed(1)}%
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            label="Attendance Rate"
+            value={`${attendancePercentage.toFixed(1)}%`}
+            icon={UserCheck}
+            iconClass="bg-blue-500/10 text-blue-600"
+          />
         </div>
-      {/* Attendance QR */}
-<EventAttendanceQR
-  eventId={eventId!}
-  eventName={eventName || 'Event'}
-/>
-        {/* Student Attendance */}
-        <Card>
-          <CardHeader>
+
+        {/* QR */}
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+          <div className="border-b border-border/60 bg-muted/20 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <QrCode className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-semibold">Quick Check-In</h2>
+                <p className="text-sm text-muted-foreground">
+                  Let students scan the QR code to mark attendance.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            <EventAttendanceQR
+              eventId={eventId!}
+              eventName={eventName || 'Event'}
+            />
+          </div>
+        </div>
+
+        {/* Students */}
+        <Card className="overflow-hidden rounded-2xl border-border/70 shadow-sm">
+          <CardHeader className="border-b border-border/60 bg-muted/10">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle>Student Attendance</CardTitle>
+                <CardTitle className="text-xl">
+                  Student Attendance
+                </CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Mark students as present or absent.
+                  Manually mark students as present or absent.
                 </p>
               </div>
 
-              <div className="relative w-full sm:w-72">
+              <div className="relative w-full sm:w-80">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
                 <Input
                   value={search}
                   onChange={(event) =>
                     setSearch(event.target.value)
                   }
-                  placeholder="Search student..."
-                  className="pl-9"
+                  placeholder="Search by name, email or department..."
+                  className="h-10 rounded-xl border-border/70 bg-background pl-9"
                 />
               </div>
             </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="flex min-h-[280px] flex-col items-center justify-center gap-3">
+                <div className="rounded-2xl bg-primary/10 p-4">
+                  <Loader2 className="h-7 w-7 animate-spin text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Loading attendance...
+                </p>
               </div>
             ) : students.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
-                <Users className="mx-auto mb-3 h-10 w-10" />
-                <p className="font-medium">
-                  No registered students found
-                </p>
-                <p className="mt-1 text-sm">
+              <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
+                <div className="mb-4 rounded-2xl bg-primary/10 p-4">
+                  <Users className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="font-semibold">
+                  No registered students
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Students registered for this event will appear here.
                 </p>
               </div>
@@ -389,64 +387,70 @@ export default function Attendance() {
               <div className="space-y-3">
                 {filteredStudents.map((student) => {
                   const currentStatus = attendance[student.id];
-                  const isSaving =
-                    savingStudent === student.id;
+                  const isSaving = savingStudent === student.id;
 
                   return (
                     <div
                       key={student.id}
-                      className="flex flex-col gap-4 rounded-2xl border bg-background p-4 sm:flex-row sm:items-center sm:justify-between"
+                      className="group flex flex-col gap-4 rounded-2xl border border-border/60 bg-background p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold">
-                            {student.name}
-                          </p>
-
-                          {currentStatus === 'present' && (
-                            <Badge variant="success">
-                              Present
-                            </Badge>
-                          )}
-
-                          {currentStatus === 'absent' && (
-                            <Badge variant="destructive">
-                              Absent
-                            </Badge>
-                          )}
-
-                          {!currentStatus && (
-                            <Badge variant="outline">
-                              Pending
-                            </Badge>
-                          )}
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+                          {student.name?.charAt(0)?.toUpperCase() || 'S'}
                         </div>
 
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {student.email}
-                        </p>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate font-semibold">
+                              {student.name}
+                            </p>
 
-                        {student.department && (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {student.department}
+                            {currentStatus === 'present' && (
+                              <Badge className="rounded-full bg-emerald-100 px-2.5 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                Present
+                              </Badge>
+                            )}
+
+                            {currentStatus === 'absent' && (
+                              <Badge className="rounded-full bg-red-100 px-2.5 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                                Absent
+                              </Badge>
+                            )}
+
+                            {!currentStatus && (
+                              <Badge
+                                variant="outline"
+                                className="rounded-full"
+                              >
+                                Pending
+                              </Badge>
+                            )}
+                          </div>
+
+                          <p className="mt-1 truncate text-sm text-muted-foreground">
+                            {student.email}
                           </p>
-                        )}
+
+                          {student.department && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {student.department}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex shrink-0 gap-2">
                         <Button
                           size="sm"
+                          disabled={isSaving}
                           variant={
                             currentStatus === 'present'
                               ? 'default'
                               : 'outline'
                           }
-                          disabled={isSaving}
+                          className="rounded-xl"
                           onClick={() =>
-                            markAttendance(
-                              student.id,
-                              'present'
-                            )
+                            markAttendance(student.id, 'present')
                           }
                         >
                           {isSaving &&
@@ -460,17 +464,15 @@ export default function Attendance() {
 
                         <Button
                           size="sm"
+                          disabled={isSaving}
                           variant={
                             currentStatus === 'absent'
                               ? 'destructive'
                               : 'outline'
                           }
-                          disabled={isSaving}
+                          className="rounded-xl"
                           onClick={() =>
-                            markAttendance(
-                              student.id,
-                              'absent'
-                            )
+                            markAttendance(student.id, 'absent')
                           }
                         >
                           {isSaving &&
@@ -487,8 +489,14 @@ export default function Attendance() {
                 })}
 
                 {filteredStudents.length === 0 && (
-                  <div className="py-8 text-center text-muted-foreground">
-                    No students match your search.
+                  <div className="py-10 text-center">
+                    <Search className="mx-auto mb-3 h-7 w-7 text-muted-foreground" />
+                    <p className="font-medium">
+                      No students found
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Try a different search term.
+                    </p>
                   </div>
                 )}
               </div>
@@ -496,13 +504,19 @@ export default function Attendance() {
           </CardContent>
         </Card>
 
-        {!loading && students.length > 0 && pendingCount > 0 && (
-          <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-            <strong className="text-foreground">
-              {pendingCount}
-            </strong>{' '}
-            student{pendingCount !== 1 ? 's' : ''} still pending
-            attendance.
+        {/* Pending notice */}
+        {!loading && students.length > 0 && (
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-4">
+            <div>
+              <p className="font-semibold">
+                {pendingCount} pending
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Students whose attendance has not been marked yet.
+              </p>
+            </div>
+
+            <ClipboardCheck className="hidden h-6 w-6 text-primary sm:block" />
           </div>
         )}
       </div>
@@ -510,3 +524,37 @@ export default function Attendance() {
   );
 }
 
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  iconClass,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ElementType;
+  iconClass: string;
+}) {
+  return (
+    <Card className="group relative overflow-hidden rounded-2xl border-border/70 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="absolute left-0 top-0 h-1 w-full bg-primary/70" />
+
+      <CardContent className="flex items-center gap-4 p-5 pt-6">
+        <div
+          className={`rounded-xl p-3 ${iconClass}`}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div>
+          <p className="text-sm text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-1 text-2xl font-bold tracking-tight">
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

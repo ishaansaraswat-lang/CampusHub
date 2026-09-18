@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import {
@@ -104,20 +104,20 @@ export default function CoordinatorsManagement() {
               </Link>
             </Button>
             <h1 className="text-3xl font-bold">{event.name}</h1>
-            <p className="text-muted-foreground">Manage event coordinators and admins</p>
+            <p className="text-muted-foreground">Assign a student as the Event Admin for this event</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Add Coordinator
+                Assign Event Admin
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Add Coordinator</DialogTitle>
+                <DialogTitle>Assign Event Admin</DialogTitle>
                 <DialogDescription>
-                  Search and add a user as an event coordinator
+                  Search and assign a student as Event Admin
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -179,9 +179,9 @@ export default function CoordinatorsManagement() {
         {/* Coordinators List */}
         <Card>
           <CardHeader>
-            <CardTitle>Event Coordinators</CardTitle>
+            <CardTitle>Event Admin</CardTitle>
             <CardDescription>
-              Users who can manage this event, its activities, and registrations
+              Students assigned to manage this event, its activities, registrations, attendance, results and gallery
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -252,7 +252,7 @@ export default function CoordinatorsManagement() {
                 </p>
                 <Button onClick={() => setIsDialogOpen(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Add Coordinator
+                  Assign Event Admin
                 </Button>
               </div>
             )}
@@ -262,3 +262,4 @@ export default function CoordinatorsManagement() {
     </MainLayout>
   );
 }
+
