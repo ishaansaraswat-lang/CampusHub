@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -120,15 +120,6 @@ export function PlacementDashboard() {
               subtitle="Manage companies, job postings, applications, and student placements."
             />
           </div>
-
-          <Link
-            to="/placement-admin/jobs"
-            className="group inline-flex w-fit items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <Briefcase className="h-4 w-4" />
-            Manage Job Postings
-            <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </Link>
         </div>
       </div>
 
@@ -238,7 +229,7 @@ export function PlacementDashboard() {
                         <p className="truncate font-semibold">{job.title}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {job.package_lpa
-                            ? `₹${job.package_lpa} LPA`
+                            ? `?${job.package_lpa} LPA`
                             : 'Package TBD'}
                         </p>
                       </div>
@@ -333,3 +324,4 @@ export function PlacementDashboard() {
     </div>
   );
 }
+

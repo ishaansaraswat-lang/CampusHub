@@ -1,4 +1,4 @@
-﻿import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/useRole';
 import { useAuth } from '@/contexts/AuthContext';
@@ -263,7 +263,24 @@ export function AppSidebar() {
 
         {isAdmissionsCell && renderNavGroup('Admissions Cell', admissionsNav)}
 
-        {isAdmissionsCell && (
+        {isAdmissionsCell && !isPlacementCell && (
+          <div className="mx-2 mt-3 border-t border-white/10 pt-3">
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`
+              }
+            >
+              <UserRound className="h-4 w-4" />
+              Profile
+            </NavLink>
+          </div>
+        )}
+        {isPlacementCell && (
           <div className="mx-2 mt-3 border-t border-white/10 pt-3">
             <NavLink
               to="/profile"
@@ -322,6 +339,12 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+
+
+
+
+
 
 
 
