@@ -10,12 +10,13 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+import DashboardRouter from "./pages/DashboardRouter";
 import Profile from "./pages/Profile";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import Placements from "./pages/Placements";
 import AdmissionsManagement from "./pages/admissions/Management";
+import AdmissionsDashboard from "./pages/admissions/Dashboard";
 import AdmissionsAnalytics from "./pages/admissions/Analytics";
 import PlacementDetail from "./pages/PlacementDetail";
 import SuperAdminDashboard from "./pages/super-admin/Dashboard";
@@ -64,7 +65,7 @@ const App = () => (
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <DashboardRouter />
                 </ProtectedRoute>
               }
             />
@@ -185,24 +186,33 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-             {/* Admissions Routes */}
-             <Route
-             path="/admissions/manage"
-             element={
-             <ProtectedRoute allowedRoles={['admissions_cell']}>
-             <AdmissionsManagement />
-             </ProtectedRoute>
+            {/* Admissions Routes */}
+            <Route
+              path="/admissions/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['admissions_cell']}>
+                  <AdmissionsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admissions/manage"
+              element={
+                <ProtectedRoute allowedRoles={['admissions_cell']}>
+                  <AdmissionsManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admissions/analytics"
+              element={
+                <ProtectedRoute allowedRoles={['admissions_cell']}>
+                  <AdmissionsAnalytics />
+                </ProtectedRoute>
               }
             />
 
-            <Route
-            path="/admissions/analytics"
-            element={
-            <ProtectedRoute allowedRoles={['admissions_cell']}>
-            <AdmissionsAnalytics />
-            </ProtectedRoute>
-            }
-            />
+
             <Route
               path="/placement-admin/companies"
               element={
@@ -325,6 +335,13 @@ const App = () => (
 );
 
 export default App;
+
+
+
+
+
+
+
 
 
 

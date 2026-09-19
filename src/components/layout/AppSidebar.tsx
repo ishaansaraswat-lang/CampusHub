@@ -1,4 +1,4 @@
-﻿import { Link, useLocation } from 'react-router-dom';
+﻿import { Link, NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useRole } from '@/hooks/useRole';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +31,7 @@ import {
   Image,
   ClipboardList,
   BarChart3,
+  UserRound,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -143,6 +144,11 @@ export function AppSidebar() {
 
   const admissionsNav: NavItem[] = [
     {
+      title: 'Dashboard',
+      url: '/dashboard',
+      icon: LayoutDashboard,
+    },
+    {
       title: 'Manage Admissions',
       url: '/admissions/manage',
       icon: ClipboardList,
@@ -162,6 +168,16 @@ export function AppSidebar() {
       title: 'Events',
       url: '/super-admin/events',
       icon: Calendar,
+    },
+    {
+      title: 'Placement Overview',
+      url: '/super-admin/placement',
+      icon: Briefcase,
+    },
+    {
+      title: 'Admissions Overview',
+      url: '/super-admin/admissions',
+      icon: GraduationCap,
     },
     {
       title: 'Users',
@@ -247,54 +263,49 @@ export function AppSidebar() {
 
         {isAdmissionsCell && renderNavGroup('Admissions Cell', admissionsNav)}
 
+        {isAdmissionsCell && (
+          <div className="mx-2 mt-3 border-t border-white/10 pt-3">
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                }`
+              }
+            >
+              <UserRound className="h-4 w-4" />
+              Profile
+            </NavLink>
+          </div>
+        )}
         {isSuperAdmin && renderNavGroup('Super Admin', superAdminNav)}
       </SidebarContent>
 
       <SidebarFooter className="bg-[#0B1220] border-t border-white/10 p-3">
         <SidebarMenu className="gap-1.5">
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="h-auto rounded-xl border border-white/10 bg-white/5 p-3 transition-all hover:bg-white/10 data-[state=open]:bg-white/10"
-                >
-                  <Avatar className="h-9 w-9 ring-2 ring-white/10">
-                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="h-auto cursor-default rounded-xl border border-white/10 bg-white/5 p-3 hover:bg-white/5"
+            >
+              <Avatar className="h-9 w-9 ring-2 ring-white/10">
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="bg-blue-600 text-white">
+                  {profile?.name ? getInitials(profile.name) : 'U'}
+                </AvatarFallback>
+              </Avatar>
 
-                    <AvatarFallback className="bg-blue-600 text-white">
-                      {profile?.name
-                        ? getInitials(profile.name)
-                        : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex flex-1 flex-col text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {profile?.name || 'User'}
-                    </span>
-
-                    <span className="truncate text-xs text-muted-foreground">
-                      {profile?.email}
-                    </span>
-                  </div>
-
-                  <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width]"
-                align="start"
-              >
-                <DropdownMenuItem asChild>
-                  <Link to="/profile">
-                    <UserCircle className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              <div className="flex flex-1 flex-col text-left text-sm leading-tight">
+                <span className="truncate font-semibold">
+                  {profile?.name || 'User'}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {profile?.email}
+                </span>
+              </div>
+            </SidebarMenuButton>
           </SidebarMenuItem>
 
           <SidebarMenuItem>
@@ -311,6 +322,23 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

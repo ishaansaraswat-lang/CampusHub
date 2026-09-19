@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2, X, Save } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Pencil, Plus, Trash2, X, Save, Filter, BarChart3, Users, FileText, TrendingUp } from "lucide-react";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { DashboardHeader, Panel } from "@/components/dashboard/shared";
@@ -34,12 +34,21 @@ const emptyForm: FormData = {
   admissions: "",
 };
 
+const formatNumber = (value: number) => value.toLocaleString("en-IN");
+
+const conversionRate = (applications: number, admissions: number) =>
+  applications > 0 ? (admissions / applications) * 100 : 0;
+
 export default function AdmissionsManagement() {
   const [records, setRecords] = useState<AdmissionRecord[]>([]);
   const [form, setForm] = useState<FormData>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [selectedCourse, setSelectedCourse] = useState("all");
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -64,6 +73,114 @@ export default function AdmissionsManagement() {
   useEffect(() => {
     fetchRecords();
   }, []);
+
+  const academicYears = useMemo(
+    () =>
+      Array.from(new Set(records.map((record) => record.academic_year))).sort(
+        (a, b) => b.localeCompare(a)
+      ),
+    [records]
+  );
+
+  const regions = useMemo(
+    () =>
+      Array.from(new Set(records.map((record) => record.region))).sort(),
+    [records]
+  );
+
+  const courses = useMemo(
+    () =>
+      Array.from(new Set(records.map((record) => record.course))).sort(),
+    [records]
+  );
+
+  const filteredRecords = useMemo(() => {
+    return records.filter((record) => {
+      const yearMatch =
+        selectedYear === "all" || record.academic_year === selectedYear;
+
+      const regionMatch =
+        selectedRegion === "all" || record.region === selectedRegion;
+
+      const courseMatch =
+        selectedCourse === "all" || record.course === selectedCourse;
+
+      return yearMatch && regionMatch && courseMatch;
+    });
+  }, [records, selectedYear, selectedRegion, selectedCourse]);
+
+  const summary = useMemo(() => {
+    const applications = filteredRecords.reduce(
+      (sum, record) => sum + Number(record.applications || 0),
+      0
+    );
+
+    const admissions = filteredRecords.reduce(
+      (sum, record) => sum + Number(record.admissions || 0),
+      0
+    );
+
+    return {
+      applications,
+      admissions,
+      conversion: conversionRate(applications, admissions),
+      records: filteredRecords.length,
+    };
+  }, [filteredRecords]);
+
+  const courseBreakdown = useMemo(() => {
+    const map = new Map<
+      string,
+      { applications: number; admissions: number }
+    >();
+
+    filteredRecords.forEach((record) => {
+      const current = map.get(record.course) || {
+        applications: 0,
+        admissions: 0,
+      };
+
+      current.applications += Number(record.applications || 0);
+      current.admissions += Number(record.admissions || 0);
+
+      map.set(record.course, current);
+    });
+
+    return Array.from(map.entries())
+      .map(([course, data]) => ({
+        course,
+        ...data,
+        conversion: conversionRate(data.applications, data.admissions),
+      }))
+      .sort((a, b) => b.applications - a.applications);
+  }, [filteredRecords]);
+
+  const regionBreakdown = useMemo(() => {
+    const map = new Map<
+      string,
+      { applications: number; admissions: number }
+    >();
+
+    filteredRecords.forEach((record) => {
+      const current = map.get(record.region) || {
+        applications: 0,
+        admissions: 0,
+      };
+
+      current.applications += Number(record.applications || 0);
+      current.admissions += Number(record.admissions || 0);
+
+      map.set(record.region, current);
+    });
+
+    return Array.from(map.entries())
+      .map(([region, data]) => ({
+        region,
+        ...data,
+        conversion: conversionRate(data.applications, data.admissions),
+      }))
+      .sort((a, b) => b.applications - a.applications);
+  }, [filteredRecords]);
 
   const updateField = (field: keyof FormData, value: string) => {
     setForm((prev) => ({
@@ -194,15 +311,21 @@ export default function AdmissionsManagement() {
     await fetchRecords();
   };
 
+  const clearFilters = () => {
+    setSelectedYear("all");
+    setSelectedRegion("all");
+    setSelectedCourse("all");
+  };
+
   return (
     <MainLayout>
       <DashboardHeader
         title="Admissions Management"
-        subtitle="Add, update and manage admission data used by Admissions Analytics."
+        subtitle="Manage admission performance across academic sessions, regions and courses."
       />
 
       <div className="space-y-6">
-        {/* Form */}
+        {/* Add / Edit */}
         <Panel
           title={editingId ? "Edit Admission Record" : "Add Admission Record"}
           description={
@@ -234,7 +357,7 @@ export default function AdmissionsManagement() {
                 </label>
                 <input
                   type="text"
-                  placeholder="B.Tech CSE"
+                  placeholder="B.Tech"
                   value={form.course}
                   onChange={(e) => updateField("course", e.target.value)}
                   className="w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
@@ -318,27 +441,264 @@ export default function AdmissionsManagement() {
           </form>
         </Panel>
 
-        {/* Records Table */}
+        {/* Filters */}
+        <Panel
+          title="Admission Performance"
+          description="Select a session, region or course to drill into the admission data."
+        >
+          <div className="mb-5 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Filter className="h-4 w-4 text-blue-600" />
+            Filters
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Academic Session
+              </label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="w-full rounded-xl border bg-background px-3 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Sessions</option>
+                {academicYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Region / State
+              </label>
+              <select
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                className="w-full rounded-xl border bg-background px-3 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Regions</option>
+                {regions.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Course
+              </label>
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                className="w-full rounded-xl border bg-background px-3 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Courses</option>
+                {courses.map((course) => (
+                  <option key={course} value={course}>
+                    {course}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="w-full rounded-xl border px-4 py-3 text-sm font-semibold hover:bg-muted"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+        </Panel>
+
+        {/* KPI cards */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Applications</p>
+              <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
+                <FileText className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="mt-3 text-2xl font-bold">
+              {formatNumber(summary.applications)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Based on current filters
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Admissions</p>
+              <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
+                <Users className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="mt-3 text-2xl font-bold">
+              {formatNumber(summary.admissions)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Students admitted
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Conversion Rate</p>
+              <div className="rounded-xl bg-violet-50 p-2.5 text-violet-600">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="mt-3 text-2xl font-bold text-emerald-600">
+              {summary.conversion.toFixed(1)}%
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Admissions ÷ applications
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">Records</p>
+              <div className="rounded-xl bg-amber-50 p-2.5 text-amber-600">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="mt-3 text-2xl font-bold">{summary.records}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Matching records
+            </p>
+          </div>
+        </div>
+
+        {/* Breakdown */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <Panel
+            title="Course Breakdown"
+            description="Performance across courses for the selected filters."
+          >
+            {courseBreakdown.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                No course data available.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="px-3 py-3 font-semibold">Course</th>
+                      <th className="px-3 py-3 text-right font-semibold">
+                        Applications
+                      </th>
+                      <th className="px-3 py-3 text-right font-semibold">
+                        Admissions
+                      </th>
+                      <th className="px-3 py-3 text-right font-semibold">
+                        Rate
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {courseBreakdown.map((item) => (
+                      <tr
+                        key={item.course}
+                        className="border-b last:border-0"
+                      >
+                        <td className="px-3 py-3 font-medium">{item.course}</td>
+                        <td className="px-3 py-3 text-right">
+                          {formatNumber(item.applications)}
+                        </td>
+                        <td className="px-3 py-3 text-right font-semibold text-emerald-600">
+                          {formatNumber(item.admissions)}
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          {item.conversion.toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
+
+          <Panel
+            title="Region Breakdown"
+            description="State/region performance for the selected filters."
+          >
+            {regionBreakdown.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">
+                No region data available.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="px-3 py-3 font-semibold">Region</th>
+                      <th className="px-3 py-3 text-right font-semibold">
+                        Applications
+                      </th>
+                      <th className="px-3 py-3 text-right font-semibold">
+                        Admissions
+                      </th>
+                      <th className="px-3 py-3 text-right font-semibold">
+                        Rate
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {regionBreakdown.map((item) => (
+                      <tr
+                        key={item.region}
+                        className="border-b last:border-0"
+                      >
+                        <td className="px-3 py-3 font-medium">{item.region}</td>
+                        <td className="px-3 py-3 text-right">
+                          {formatNumber(item.applications)}
+                        </td>
+                        <td className="px-3 py-3 text-right font-semibold text-emerald-600">
+                          {formatNumber(item.admissions)}
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          {item.conversion.toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
+        </div>
+
+        {/* Records */}
         <Panel
           title="Admission Records"
-          description={`${records.length} record${
-            records.length === 1 ? "" : "s"
-          } currently stored`}
+          description={`${filteredRecords.length} of ${records.length} records shown`}
         >
           {loading ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
               Loading admission records...
             </div>
-          ) : records.length === 0 ? (
+          ) : filteredRecords.length === 0 ? (
             <div className="rounded-lg border border-dashed py-12 text-center">
-              <p className="font-medium">No admission records yet</p>
+              <p className="font-medium">No matching admission records</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Add your first record using the form above.
+                Try changing the session, region or course filters.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[850px] text-sm">
+              <table className="w-full min-w-[900px] text-sm">
                 <thead>
                   <tr className="border-b text-left">
                     <th className="px-4 py-3 font-semibold">Academic Year</th>
@@ -360,11 +720,11 @@ export default function AdmissionsManagement() {
                 </thead>
 
                 <tbody>
-                  {records.map((record) => {
-                    const conversion =
-                      record.applications > 0
-                        ? (record.admissions / record.applications) * 100
-                        : 0;
+                  {filteredRecords.map((record) => {
+                    const conversion = conversionRate(
+                      record.applications,
+                      record.admissions
+                    );
 
                     return (
                       <tr
@@ -372,7 +732,9 @@ export default function AdmissionsManagement() {
                         className="border-b last:border-0 hover:bg-muted/40"
                       >
                         <td className="px-4 py-3 font-medium">
-                          {record.academic_year}
+                          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                            {record.academic_year}
+                          </span>
                         </td>
 
                         <td className="px-4 py-3">{record.course}</td>
@@ -380,14 +742,14 @@ export default function AdmissionsManagement() {
                         <td className="px-4 py-3">{record.region}</td>
 
                         <td className="px-4 py-3 text-right">
-                          {record.applications.toLocaleString()}
+                          {formatNumber(record.applications)}
+                        </td>
+
+                        <td className="px-4 py-3 text-right font-semibold text-emerald-600">
+                          {formatNumber(record.admissions)}
                         </td>
 
                         <td className="px-4 py-3 text-right font-medium">
-                          {record.admissions.toLocaleString()}
-                        </td>
-
-                        <td className="px-4 py-3 text-right">
                           {conversion.toFixed(1)}%
                         </td>
 
@@ -424,3 +786,4 @@ export default function AdmissionsManagement() {
     </MainLayout>
   );
 }
+

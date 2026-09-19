@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
+﻿import { useAuth } from '@/contexts/AuthContext';
 import type { AppRole } from '@/types/database';
 
 export function useRole() {
@@ -36,9 +36,13 @@ export function useRole() {
     isStudent,
     isEventAdmin,
     isPlacementCell,
+    isAdmissionsCell,
     isSuperAdmin,
     getPrimaryRole,
   };
 }
+
+
+
 
 
